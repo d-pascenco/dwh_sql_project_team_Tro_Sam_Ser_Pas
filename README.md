@@ -44,6 +44,12 @@ config.env
 ./scripts/git_push.sh "название коммита своё"
 ```
 
+Для удобства сделаны два ноутбука:
+```text
+git_pull-from_github.ipynb 
+push_to_github.ipynb
+```
+
 После первого подтягивания репозитория из гитхаб, нужно дать права на запуск скриптов:
 ```
 cd /home/jovyan/work/dwh_sql_project_team_Tro_Sam_Ser_Pas
