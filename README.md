@@ -51,4 +51,12 @@ chmod +x scripts/git_push.sh
 chmod +x scripts/git_pull.sh
 ```
 
-Далее нужно настроить один раз имя 
+Далее нужно настроить один раз имя и email для пушей командами:
+```
+git config --global user.name "Dmitri Pascenco"
+git config --global user.email "твой_email_от_GitHub"
+```
+Введя эти команды проверьте, что всё применилось:
+```
+git config --global --list
+```
