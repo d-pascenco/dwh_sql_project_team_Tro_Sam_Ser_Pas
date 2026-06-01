@@ -41,13 +41,13 @@ config.env
 Запушить свои наработки:
 
 ```
-./scripts/git_push.sh "название коммита своё"
+./scripts/git_push.sh название коммита своё
 ```
 
 Для удобства сделаны два ноутбука в ячейках которых запускаются команды пуша и пулла:
 ```text
-git_pull-from_github.ipynb 
-push_to_github.ipynb
+git_pull.ipynb 
+git_push.ipynb
 ```
 
 После первого подтягивания репозитория из гитхаб, нужно дать права на запуск скриптов:
@@ -67,12 +67,88 @@ git config --global user.email "твой_email_от_GitHub"
 git config --global --list
 ```
 
-# ODS, загрузка в S3 и Airflow
+# ODS, загрузка данных в S3 и Airflow
 
-1. Созданы таблицы:
-flights_raw -- хранит сырые строки рейсов из S3 (S3 flights_us_data/*.csv.gz)
-airports_raw -- хранит сырой справочник аэропортов (airports.csv)
-load_control -- хранит техническую информацию о загрузках (какой поток запускался, когда был успешный запуск,
-какой файл загружался, сколько строк загружено, была ли ошибка)
+ODS-блок отвечает за первичную загрузку данных в PostgreSQL.
 
-Создаем через `dwh_sql_project_team_Tro_Sam_Ser_Pas/python/ods/create_ods_tables.ipynb`, запуская DDL файлы из `dwh_sql_project_team_Tro_Sam_Ser_Pas/sql/ods/`.
+## Используемые схемы
+
+В базе `dwh_training` используются схемы:
+
+```text
+team_tro_sam_ser_pas_ods
+team_tro_sam_ser_pas_etl
+```
+
+## Таблицы
+
+`team_tro_sam_ser_pas_ods.flights_raw` -- хранит сырые строки рейсов из S3 `gsbdwhdata/flights_us_data/YYYY-MM-DD/flights_YYYY-MM-DD.csv.gz`
+
+`team_tro_sam_ser_pas_ods.airports_raw` -- хранит сырой справочник аэропортов https://ourairports.com/data/airports.csv
+
+
+`team_tro_sam_ser_pas_etl.load_control` -- хранит техническую информацию о загрузках: поток, источник, `upload_id`, количество строк, статус и ошибки.
+
+В таблицах `flights_raw` и `airports_raw` используется защита от дублей.
+
+## SQL-скрипты ODS
+
+Файлы находятся в `sql/ods/`
+
+```text
+001_create_ods_schema.sql    — создание ODS и ETL схем
+002_create_ods_tables.sql    — создание flights_raw и airports_raw
+003_create_etl_control.sql   — создание load_control
+```
+
+## Python-скрипты ODS
+
+Файлы находятся в `python/ods/`
+
+```text
+create_ods_tables.py      — выполняет DDL-скрипты из sql/ods/
+load_airports_to_ods.py   — загружает airports.csv в airports_raw
+load_flights_to_ods.py    — загружает новые файлы рейсов из S3 в flights_raw
+run_ods_pipeline.py       — запускает полный ODS pipeline
+```
+
+## Инкрементальная загрузка
+
+`load_flights_to_ods.py`:
+
+1. получает список файлов из S3 по префиксу `flights_us_data/`;
+2. проверяет, какие `source` уже есть в `flights_raw`;
+3. загружает только новые файлы;
+4. обновляет `load_control`.
+
+## Локальный запуск ODS pipeline
+
+Из корня проекта:
+
+```bash
+cd /home/jovyan/work/dwh_sql_project_team_Tro_Sam_Ser_Pas
+python python/ods/run_ods_pipeline.py
+```
+
+# Airflow
+
+DAG для запуска ODS pipeline `dags/dipaschenko_ods_pipeline_dag.py`
+
+Имя DAG в Airflow `dipaschenko_ods_pipeline_dag`
+
+## Загрузка файлов в Airflow bucket
+
+Для загрузки нужных файлов в bucket `gsb2024airflow` используется `python/s3/s3_push_AF.py`
+
+Скрипт загружает:
+
+```text
+python/ods/     → Team_Trofimov_Samundzhyan_Serenko_Paschenko/python/ods/
+sql/ods/        → Team_Trofimov_Samundzhyan_Serenko_Paschenko/sql/ods/
+config.env      → Team_Trofimov_Samundzhyan_Serenko_Paschenko/config.env
+DAG-файл        → корень bucket gsb2024airflow
+```
+
+
+# dbt
+Командная папка для dbt-моделей в бакете `dbt/models/dwh_sql_project_team_Tro_Sam_Ser_Pas/`

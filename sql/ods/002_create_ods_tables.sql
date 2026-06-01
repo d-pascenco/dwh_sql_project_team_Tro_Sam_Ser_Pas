@@ -3,7 +3,8 @@ create table if not exists team_tro_sam_ser_pas_ods.flights_raw (
     row_number bigint not null,                                    -- номер строки внутри этого файла
     data jsonb not null,                                           -- основные данные (строка) в формате json
     upload_time timestamp not null default now(),                  -- дата и время загрузки строки в базу
-    upload_id bigint not null                                      -- номер батча загрузки, чтобы различать
+    upload_id bigint not null,                                     -- номер батча загрузки, чтобы различать
+    constraint uc_source_row_number_fli unique (source, row_number)    -- ограничиваю уникальность на всякий
 );
 
 create table if not exists team_tro_sam_ser_pas_ods.airports_raw (
@@ -11,5 +12,6 @@ create table if not exists team_tro_sam_ser_pas_ods.airports_raw (
     row_number bigint not null,
     data jsonb not null,
     upload_time timestamp not null default now(),
-    upload_id bigint not null
+    upload_id bigint not null,
+    constraint uc_source_row_number_air unique (source, row_number)
 );

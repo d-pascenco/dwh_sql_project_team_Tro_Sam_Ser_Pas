@@ -2,7 +2,7 @@
 
 set -e
 
-source config.env
+source git_config.env
 
 if [ -z "$1" ]; then
   echo "Commit message is required"

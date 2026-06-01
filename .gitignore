@@ -16,3 +16,4 @@ data/
 *.xlsx
 
 .DS_Store
+git_config.env
