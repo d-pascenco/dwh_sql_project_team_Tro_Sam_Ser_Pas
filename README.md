@@ -158,3 +158,5 @@ DAG-файл        → корень bucket gsb2024airflow
 
 # dbt
 Командная папка для dbt-моделей в бакете `dbt/models/dwh_sql_project_team_Tro_Sam_Ser_Pas/`
+
+
