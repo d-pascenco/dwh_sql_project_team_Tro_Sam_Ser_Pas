@@ -24,12 +24,24 @@
 - `screenshots/` — скриншоты успешных запусков и дашбордов
 - `data/` — локальные данные, не коммитятся в GitHub
 
+## Терминал
+
+В JupyterLab откройте встроенный терминал: File → New → Terminal или в launcher выберите Terminal.
+
+Для работы с гитхабом, нужно дать права на запуск скриптов:
+```
+cd /home/jovyan/work/dwh_sql_project_team_Tro_Sam_Ser_Pas
+chmod +x scripts/git_push.sh
+chmod +x scripts/git_pull.sh
+```
+
 ## Секреты
 
-Для локальных настроек используется файл:
+Для локальных настроек используется файлы:
 
 ```text
 config.env
+git_config.env
 ```
 
 Подтянуть актуальную версию из гитхаб:
@@ -48,13 +60,6 @@ config.env
 ```text
 git_pull.ipynb 
 git_push.ipynb
-```
-
-После первого подтягивания репозитория из гитхаб, нужно дать права на запуск скриптов:
-```
-cd /home/jovyan/work/dwh_sql_project_team_Tro_Sam_Ser_Pas
-chmod +x scripts/git_push.sh
-chmod +x scripts/git_pull.sh
 ```
 
 Далее нужно настроить один раз имя и email для пушей командами:
