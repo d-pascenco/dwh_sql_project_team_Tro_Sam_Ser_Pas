@@ -71,6 +71,8 @@ git config --global user.email "твой_email_от_GitHub"
 ```
 git config --global --list
 ```
+---
+
 
 # ODS, загрузка данных в S3 и Airflow
 
@@ -153,7 +155,6 @@ sql/ods/        → Team_Trofimov_Samundzhyan_Serenko_Paschenko/sql/ods/
 config.env      → Team_Trofimov_Samundzhyan_Serenko_Paschenko/config.env
 DAG-файл        → корень bucket gsb2024airflow
 ```
-
 
 # dbt
 Командная папка для dbt-моделей в бакете `dbt/models/dwh_sql_project_team_Tro_Sam_Ser_Pas/`
