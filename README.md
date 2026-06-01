@@ -2,7 +2,7 @@
 
 ## Цель
 
-Разработка хранилища данных для анализа авиаперелётов США.
+Разработка хранилища данных для анализа авиаперелётов.
 
 ## Стек
 
@@ -66,3 +66,13 @@ git config --global user.email "твой_email_от_GitHub"
 ```
 git config --global --list
 ```
+
+# ODS, загрузка в S3 и Airflow
+
+1. Созданы таблицы:
+flights_raw -- хранит сырые строки рейсов из S3 (S3 flights_us_data/*.csv.gz)
+airports_raw -- хранит сырой справочник аэропортов (airports.csv)
+load_control -- хранит техническую информацию о загрузках (какой поток запускался, когда был успешный запуск,
+какой файл загружался, сколько строк загружено, была ли ошибка)
+
+Создаем через `dwh_sql_project_team_Tro_Sam_Ser_Pas/python/ods/create_ods_tables.ipynb`, запуская DDL файлы из `dwh_sql_project_team_Tro_Sam_Ser_Pas/sql/ods/`.
