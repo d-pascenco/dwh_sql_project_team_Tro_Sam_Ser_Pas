@@ -16,6 +16,6 @@ with DAG(
         task_id="run_stg_pipeline",
         bash_command="""
         cd /opt/airflow/dags/Team_Trofimov_Samundzhyan_Serenko_Paschenko &&
-        python python/ods/run_stg_pipeline.py
+        python python/stg/run_stg_pipeline.py
         """,
     )
