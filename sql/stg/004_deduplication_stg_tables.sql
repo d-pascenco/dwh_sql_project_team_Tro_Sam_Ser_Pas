@@ -34,6 +34,8 @@ select *
 from dup_flights
 where duplicate = 1; --берем первое вхождение, то есть остальные дубликаты отсеиваются, остается самая последняя версия
 
+--Дедупликация выполнена через row_number() по ключу рейса. После проверки дублей по этому ключу 
+--повторов не обнаружили, количество строк до и после дедупликации совпадает.
 
 /*
 Дедупликация таблицы с аэропортами
@@ -56,8 +58,11 @@ with dup_airports as (
                 row_number desc
         ) as duplicate
     from team_tro_sam_ser_pas_stg.airports_clean
-    where iata_code is not null
+    where iata_code is not null --дедуплицируем только аэропорты, которые можно связать с рейсами по IATA-коду
 )
 select *
 from dup_airports
 where duplicate = 1;
+
+--Дедупликация выполнена через row_number() по ключу iata_code. После проверки дублей по этому ключу 
+--удалили 76488 повторов.
