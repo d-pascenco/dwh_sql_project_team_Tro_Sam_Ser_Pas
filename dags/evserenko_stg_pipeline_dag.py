@@ -12,10 +12,10 @@ with DAG(
     tags=["dwh", "stg", "team_tro_sam_ser_pas"],
 ) as dag:
 
-    run_ods_pipeline = BashOperator(
+    run_stg_pipeline = BashOperator(
         task_id="run_stg_pipeline",
         bash_command="""
-        cd /opt/airflow/dags/Team_Trofimov_Samundzhyan_Serenko_Paschenko &&
+        cd /opt/airflow/dags/dbt &&
         dbt run --select path:models/evserenko
         """,
     )
