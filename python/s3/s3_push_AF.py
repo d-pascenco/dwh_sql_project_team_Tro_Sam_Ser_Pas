@@ -31,6 +31,11 @@ PROJECT_PATHS_TO_UPLOAD = [
     "stg"
 ]
 
+# Эти папки дополнительно грузим в корень bucket.
+ROOT_PATHS_TO_UPLOAD = [
+    "dbt",
+]
+
 # Какие DAG-файлы грузим в корень bucket
 DAG_FILES_TO_UPLOAD = [
     "dags/dipaschenko_ods_pipeline_dag.py",
@@ -97,6 +102,25 @@ def upload_dag_to_bucket_root(s3, relative_path: str):
     upload_file(s3, local_path, s3_key)
 
 
+def upload_path_to_bucket_root(s3, relative_path: str):
+    local_path = PROJECT_DIR / relative_path
+
+    if not local_path.exists():
+        print(f"skip root path, not found: {relative_path}")
+        return
+
+    if local_path.is_file():
+        upload_file(s3, local_path, relative_path)
+        return
+
+    for path in local_path.rglob("*"):
+        if not should_upload(path):
+            continue
+
+        s3_key = path.relative_to(PROJECT_DIR).as_posix()
+        upload_file(s3, path, s3_key)
+
+
 def main():
     if not S3_BUCKET:
         raise ValueError("S3_AIRFLOW_BUCKET is empty")
@@ -106,6 +130,10 @@ def main():
     print("upload project files to team folder")
     for relative_path in PROJECT_PATHS_TO_UPLOAD:
         upload_path_to_team_folder(s3, relative_path)
+
+    print("upload root paths to bucket root")
+    for relative_path in ROOT_PATHS_TO_UPLOAD:
+        upload_path_to_bucket_root(s3, relative_path)
 
     print("upload DAG files to bucket root")
     for relative_path in DAG_FILES_TO_UPLOAD:
