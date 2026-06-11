@@ -26,6 +26,9 @@ PROJECT_PATHS_TO_UPLOAD = [
     "python",
     "sql",
     "config.env",
+    "dags",
+    "dbt",
+    "stg"
 ]
 
 # Какие DAG-файлы грузим в корень bucket
