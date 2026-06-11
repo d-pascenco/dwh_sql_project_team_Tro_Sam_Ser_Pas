@@ -23,14 +23,15 @@ EXCLUDE_SUFFIXES = {
 
 # Тут папки, что мы выбираем для пуша в S3 AF
 PROJECT_PATHS_TO_UPLOAD = [
-    "python/ods",
-    "sql/ods",
+    "python",
+    "sql",
     "config.env",
 ]
 
 # Какие DAG-файлы грузим в корень bucket
 DAG_FILES_TO_UPLOAD = [
-    "dags/dipaschenko_ods_pipeline_dag.py"
+    "dags/dipaschenko_ods_pipeline_dag.py",
+    "dags/evserenko_stg_pipeline_dag.py"
 ]
 
 
