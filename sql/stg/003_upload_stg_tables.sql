@@ -81,7 +81,7 @@ on conflict (source, row_number) do update set --при случайном за�
     late_aircraft_min = excluded.late_aircraft_min,
     processed_dttm = excluded.processed_dttm,
     batch_id = excluded.batch_id;
-),
+
 
 
 insert into team_tro_sam_ser_pas_stg.airports_clean (
