@@ -15,7 +15,7 @@ with dup_airports as (
                 source desc,
                 row_number desc
         ) as duplicate
-    from {{ ref('stg_airports_clean') }}
+    from {{ ref('team_Tro_Sam_Ser_Pas_stg_airports_clean') }}
     where iata_code is not null
 )
 

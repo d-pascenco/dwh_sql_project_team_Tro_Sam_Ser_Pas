@@ -20,7 +20,7 @@ with dup_flights as (
                 source desc,
                 row_number desc
         ) as duplicate
-    from {{ ref('stg_flights_clean') }}
+    from {{ ref('team_Tro_Sam_Ser_Pas_stg_flights_clean') }}
 )
 
 select *

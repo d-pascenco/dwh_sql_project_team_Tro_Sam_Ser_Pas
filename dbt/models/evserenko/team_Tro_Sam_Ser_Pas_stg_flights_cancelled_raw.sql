@@ -4,5 +4,5 @@
 ) }}
 
 select *
-from {{ ref('stg_flights_deduplicated') }}
+from {{ ref('team_Tro_Sam_Ser_Pas_stg_flights_deduplicated') }}
 where cancelled = 1
