@@ -159,6 +159,93 @@ DAG-файл        → корень bucket gsb2024airflow
 # dbt
 Командная папка для dbt-моделей в бакете `dbt/models/dwh_sql_project_team_Tro_Sam_Ser_Pas/`
 
+# STG, очистка, нормализация и дедупликация данных
+
+STG-блок выполняет очистку и подготовку данных для дальнейшей загрузки в DDS.
+
+## Используемая схема
+
+```text
+team_tro_sam_ser_pas_stg
+```
+
+## Источники данных
+
+| Источник ODS | Назначение |
+|-------------|------------|
+| flights_raw | данные по авиарейсам |
+| airports_raw | справочник аэропортов |
+
+## Основные задачи STG
+
+- преобразование JSONB-данных ODS в структурированные таблицы
+- приведение типов данных
+- нормализация названий полей
+- дедупликация рейсов и аэропортов
+- разделение рейсов на выполненные и отменённые
+- подготовка данных для загрузки в DDS
+- инкрементальная обработка новых загрузок
+
+## Таблицы STG
+
+| Таблица | Назначение |
+|----------|------------|
+| flights_clean | очищенные и типизированные данные по рейсам |
+| airports_clean | очищенные и типизированные данные по аэропортам |
+| flights_deduplicated | рейсы после дедупликации |
+| airports_deduplicated | аэропорты после дедупликации |
+| flights_success_raw | выполненные рейсы |
+| flights_cancelled_raw | отменённые рейсы |
+
+## SQL-скрипты STG
+
+Файлы находятся в `sql/stg/`:
+
+```text
+001_create_stg_schema.sql         - создание схемы STG
+002_create_stg_tables.sql         - создание таблиц STG
+003_upload_stg_tables.sql         - загрузка и преобразование данных из ODS
+004_deduplication_stg_tables.sql  - дедупликация данных
+005_division_stg_tables.sql       - разделение рейсов по статусу
+```
+
+## Python-скрипты STG
+
+Файлы находятся в python/stg/:
+
+```text
+create_stg_tables.py   - выполняет SQL-скрипты STG
+run_stg_pipeline.py    - запускает полный STG pipeline
+```
+
+## Локальный запуск STG pipeline
+
+Из корня проекта (после успешного ODS):
+
+```bash
+cd /home/jovyan/work/dwh_sql_project_team_Tro_Sam_Ser_Pas
+python python/stg/run_stg_pipeline.py
+```
+
+## Airflow
+
+DAG для запуска STG pipeline: evserenko_stg_pipeline_dag.py
+
+Имя DAG в Airflow: evserenko_stg_pipeline_dag
+
+Запуск dbt-модели из dbt/models/evserenko/
+
+## dbt-модели STG
+
+```text
+dbt/models/evserenko/
+  team_Tro_Sam_Ser_Pas_stg_flights_clean.sql
+  team_Tro_Sam_Ser_Pas_stg_airports_clean.sql
+  team_Tro_Sam_Ser_Pas_stg_flights_deduplicated.sql
+  team_Tro_Sam_Ser_Pas_stg_airports_deduplicated.sql
+  team_Tro_Sam_Ser_Pas_stg_flights_success_raw.sql
+  team_Tro_Sam_Ser_Pas_stg_flights_cancelled_raw.sql
+```
 
 # DDS, детальный слой данных
 
