@@ -39,7 +39,8 @@ ROOT_PATHS_TO_UPLOAD = [
 # Какие DAG-файлы грузим в корень bucket
 DAG_FILES_TO_UPLOAD = [
     "dags/dipaschenko_ods_pipeline_dag.py",
-    "dags/evserenko_stg_pipeline_dag.py"
+    "dags/evserenko_stg_pipeline_dag.py",
+    "dags/mvtrofimov_dds_pipeline_dag.py",
 ]
 
 
