@@ -9,8 +9,12 @@ insert into team_tro_sam_ser_pas_dds.fct_flights (
     aircraft_sk,
     carrier_flight_num,
     scheduled_dep_tm,
+    flight_dttm_local,
+    scheduled_dep_dttm_local,
+    actual_dep_dttm_local,
     actual_dep_tm,
     scheduled_arr_tm,
+    scheduled_arr_dttm_local,
     actual_arr_tm,
     dep_delay_min,
     arr_delay_min,
@@ -33,8 +37,77 @@ select
     aircraft.aircraft_sk,
     f.carrier_flight_num,
     f.scheduled_dep_tm,
+    case
+        when f.scheduled_dep_tm is null then null
+        else (
+            f.flight_dt::timestamp
+            + make_interval(hours => f.scheduled_dep_tm / 100, mins => f.scheduled_dep_tm % 100)
+        ) at time zone (
+            case
+                when origin_airport.iso_region in ('US-CT', 'US-DC', 'US-DE', 'US-FL', 'US-GA', 'US-MA', 'US-MD', 'US-ME', 'US-MI', 'US-NC', 'US-NH', 'US-NJ', 'US-NY', 'US-OH', 'US-PA', 'US-RI', 'US-SC', 'US-VA', 'US-VT', 'US-WV') then 'America/New_York'
+                when origin_airport.iso_region in ('US-AL', 'US-AR', 'US-IA', 'US-IL', 'US-IN', 'US-KS', 'US-KY', 'US-LA', 'US-MN', 'US-MO', 'US-MS', 'US-ND', 'US-NE', 'US-OK', 'US-SD', 'US-TN', 'US-TX', 'US-WI') then 'America/Chicago'
+                when origin_airport.iso_region in ('US-AZ', 'US-CO', 'US-ID', 'US-MT', 'US-NM', 'US-UT', 'US-WY') then 'America/Denver'
+                when origin_airport.iso_region in ('US-CA', 'US-NV', 'US-OR', 'US-WA') then 'America/Los_Angeles'
+                when origin_airport.iso_region = 'US-AK' then 'America/Anchorage'
+                when origin_airport.iso_region = 'US-HI' then 'Pacific/Honolulu'
+                else 'UTC'
+            end
+        )
+    end as flight_dttm_local,
+    case
+        when f.scheduled_dep_tm is null then null
+        else (
+            f.flight_dt::timestamp
+            + make_interval(hours => f.scheduled_dep_tm / 100, mins => f.scheduled_dep_tm % 100)
+        ) at time zone (
+            case
+                when origin_airport.iso_region in ('US-CT', 'US-DC', 'US-DE', 'US-FL', 'US-GA', 'US-MA', 'US-MD', 'US-ME', 'US-MI', 'US-NC', 'US-NH', 'US-NJ', 'US-NY', 'US-OH', 'US-PA', 'US-RI', 'US-SC', 'US-VA', 'US-VT', 'US-WV') then 'America/New_York'
+                when origin_airport.iso_region in ('US-AL', 'US-AR', 'US-IA', 'US-IL', 'US-IN', 'US-KS', 'US-KY', 'US-LA', 'US-MN', 'US-MO', 'US-MS', 'US-ND', 'US-NE', 'US-OK', 'US-SD', 'US-TN', 'US-TX', 'US-WI') then 'America/Chicago'
+                when origin_airport.iso_region in ('US-AZ', 'US-CO', 'US-ID', 'US-MT', 'US-NM', 'US-UT', 'US-WY') then 'America/Denver'
+                when origin_airport.iso_region in ('US-CA', 'US-NV', 'US-OR', 'US-WA') then 'America/Los_Angeles'
+                when origin_airport.iso_region = 'US-AK' then 'America/Anchorage'
+                when origin_airport.iso_region = 'US-HI' then 'Pacific/Honolulu'
+                else 'UTC'
+            end
+        )
+    end as scheduled_dep_dttm_local,
+    case
+        when f.scheduled_dep_tm is null then null
+        else (
+            f.flight_dt::timestamp
+            + make_interval(hours => f.scheduled_dep_tm / 100, mins => f.scheduled_dep_tm % 100)
+            + make_interval(mins => coalesce(f.dep_delay_min, 0)::integer)
+        ) at time zone (
+            case
+                when origin_airport.iso_region in ('US-CT', 'US-DC', 'US-DE', 'US-FL', 'US-GA', 'US-MA', 'US-MD', 'US-ME', 'US-MI', 'US-NC', 'US-NH', 'US-NJ', 'US-NY', 'US-OH', 'US-PA', 'US-RI', 'US-SC', 'US-VA', 'US-VT', 'US-WV') then 'America/New_York'
+                when origin_airport.iso_region in ('US-AL', 'US-AR', 'US-IA', 'US-IL', 'US-IN', 'US-KS', 'US-KY', 'US-LA', 'US-MN', 'US-MO', 'US-MS', 'US-ND', 'US-NE', 'US-OK', 'US-SD', 'US-TN', 'US-TX', 'US-WI') then 'America/Chicago'
+                when origin_airport.iso_region in ('US-AZ', 'US-CO', 'US-ID', 'US-MT', 'US-NM', 'US-UT', 'US-WY') then 'America/Denver'
+                when origin_airport.iso_region in ('US-CA', 'US-NV', 'US-OR', 'US-WA') then 'America/Los_Angeles'
+                when origin_airport.iso_region = 'US-AK' then 'America/Anchorage'
+                when origin_airport.iso_region = 'US-HI' then 'Pacific/Honolulu'
+                else 'UTC'
+            end
+        )
+    end as actual_dep_dttm_local,
     f.actual_dep_tm,
     f.scheduled_arr_tm,
+    case
+        when f.scheduled_arr_tm is null then null
+        else (
+            f.flight_dt::timestamp
+            + make_interval(hours => f.scheduled_arr_tm / 100, mins => f.scheduled_arr_tm % 100)
+        ) at time zone (
+            case
+                when dest_airport.iso_region in ('US-CT', 'US-DC', 'US-DE', 'US-FL', 'US-GA', 'US-MA', 'US-MD', 'US-ME', 'US-MI', 'US-NC', 'US-NH', 'US-NJ', 'US-NY', 'US-OH', 'US-PA', 'US-RI', 'US-SC', 'US-VA', 'US-VT', 'US-WV') then 'America/New_York'
+                when dest_airport.iso_region in ('US-AL', 'US-AR', 'US-IA', 'US-IL', 'US-IN', 'US-KS', 'US-KY', 'US-LA', 'US-MN', 'US-MO', 'US-MS', 'US-ND', 'US-NE', 'US-OK', 'US-SD', 'US-TN', 'US-TX', 'US-WI') then 'America/Chicago'
+                when dest_airport.iso_region in ('US-AZ', 'US-CO', 'US-ID', 'US-MT', 'US-NM', 'US-UT', 'US-WY') then 'America/Denver'
+                when dest_airport.iso_region in ('US-CA', 'US-NV', 'US-OR', 'US-WA') then 'America/Los_Angeles'
+                when dest_airport.iso_region = 'US-AK' then 'America/Anchorage'
+                when dest_airport.iso_region = 'US-HI' then 'Pacific/Honolulu'
+                else 'UTC'
+            end
+        )
+    end as scheduled_arr_dttm_local,
     f.actual_arr_tm,
     f.dep_delay_min,
     f.arr_delay_min,
