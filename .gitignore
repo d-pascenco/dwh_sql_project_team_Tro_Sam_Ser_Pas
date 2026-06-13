@@ -9,12 +9,16 @@ target/
 dbt_packages/
 logs/
 python/utils/
+dags/*.ipynb
+python/ods/*.ipynb
+python/stg/*.ipynb
 
 data/
 *.csv
 *.csv.gz
 *.parquet
 *.xlsx
+*.docx
 
 .DS_Store
 git_config.env
