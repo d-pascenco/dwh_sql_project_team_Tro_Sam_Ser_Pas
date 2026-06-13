@@ -326,24 +326,71 @@ dbt/models/trofimov/
   team_Tro_Sam_Ser_Pas_dds_fct_cancelled_flights.sql
 ```
 
-## Для следующего участника (DM / DataLens)
+## DM и DataLens
 
-DDS готов для построения витрин DM. Примерные join-ы:
+DM-блок отвечает за построение витрин данных для аналитики авиарейсов, отмен и задержек.
 
-```sql
--- выполненные рейсы с атрибутами
-select
-    f.*,
-    d.year_num, d.month_name,
-    c.carrier_code,
-    origin.iata_code as origin_code, origin.municipality as origin_city,
-    dest.iata_code as dest_code, dest.municipality as dest_city
-from team_tro_sam_ser_pas_dds.fct_flights f
-join team_tro_sam_ser_pas_dds.dim_date d on f.date_sk = d.date_sk
-join team_tro_sam_ser_pas_dds.dim_carrier c on f.carrier_sk = c.carrier_sk
-join team_tro_sam_ser_pas_dds.dim_airport origin on f.origin_airport_sk = origin.airport_sk
-join team_tro_sam_ser_pas_dds.dim_airport dest on f.dest_airport_sk = dest.airport_sk;
-```
+Используемая схема: `team_tro_sam_ser_pas_dm`.
 
-Порядок запуска пайплайнов: ODS → STG → DDS → DM.
+### DM-витрины
 
+- `flight_overview` — основная витрина по рейсам в разрезе дат, перевозчиков, аэропортов вылета и прилёта.
+- `delay_reasons` — витрина для анализа причин задержек.
+
+### SQL-скрипты DM
+
+Файлы находятся в `sql/dm/`:
+
+- `001_create_dm_schema.sql` — создание DM-схемы.
+- `002_create_dm_flight_overview.sql` — создание основной витрины `flight_overview`.
+- `003_create_dm_delay_reasons.sql` — создание витрины `delay_reasons`.
+- `004_check_dm_metrics.sql` — проверочные запросы по DM-метрикам.
+- `005_datalens_chart_queries.sql` — запросы для графиков DataLens.
+
+### Основные метрики DM
+
+В DM-слое рассчитываются:
+
+- количество выполненных рейсов;
+- количество отменённых рейсов;
+- общее количество рейсов;
+- процент отмен;
+- средняя задержка вылета;
+- средняя задержка прилёта;
+- задержки по причинам;
+- показатели по датам, перевозчикам и аэропортам.
+
+### Airflow
+
+DAG для запуска DM pipeline: `dags/dasamundzhyan_dm_pipeline_dag.py`.
+
+Имя DAG в Airflow: `dasamundzhyan_dm_pipeline_dag`.
+
+DAG последовательно запускает SQL-скрипты:
+
+- `001_create_dm_schema.sql`
+- `002_create_dm_flight_overview.sql`
+- `003_create_dm_delay_reasons.sql`
+- `004_check_dm_metrics.sql`
+
+Файл `005_datalens_chart_queries.sql` не запускается в DAG, так как он используется как справочный набор запросов для построения графиков в DataLens.
+
+### DataLens
+
+В DataLens создано подключение к PostgreSQL и два датасета:
+
+- `DM Flight Overview`
+- `DM Delay Reasons`
+
+Построены 4 основных графика:
+
+- количество рейсов по датам;
+- процент отмен по перевозчикам;
+- средняя задержка вылета по перевозчикам;
+- причины задержек.
+
+На основе графиков собран дашборд `Аналитика авиарейсов`.
+
+### Порядок запуска пайплайнов
+
+ODS → STG → DDS → DM
