@@ -409,13 +409,13 @@ DAG выполняет:
 
 После создания подключения в DataLens были выбраны две DM-витрины:
 
-- team_tro_sam_ser_pas_dm.flight_overview
-- team_tro_sam_ser_pas_dm.delay_reasons
+- `team_tro_sam_ser_pas_dm.flight_overview`
+- `team_tro_sam_ser_pas_dm.delay_reasons`
 
 На основе этих витрин были созданы два датасета:
 
-- DM Flight Overview
-- DM Delay Reasons
+- `DM Flight Overview`
+- `DM Delay Reasons`
 
 Датасет DM Flight Overview используется для анализа количества рейсов, отмен и задержек по датам, перевозчикам и аэропортам.
 
@@ -423,8 +423,8 @@ DAG выполняет:
 
 В DataLens были добавлены вычисляемые поля:
 
-- cancellation_rate_pct — процент отменённых рейсов;
-- avg_dep_delay_rate_min — средняя задержка вылета.
+- `cancellation_rate_pct` — процент отменённых рейсов;
+- `avg_dep_delay_rate_min` — средняя задержка вылета.
 
 В DataLens были построены следующие графики:
 
@@ -434,5 +434,5 @@ DAG выполняет:
 - причины задержек;
 - задержки по аэропортам.
 
-Итоговый дашборд называется Аналитика авиарейсов.
+Итоговый дашборд называется `Аналитика авиарейсов`.
 ```
