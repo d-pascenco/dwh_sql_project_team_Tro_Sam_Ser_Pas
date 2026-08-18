@@ -32,11 +32,11 @@ def run_sql_file(path: Path) -> None:
 
 if __name__ == "__main__":
     sql_files = [
-        PROJECT_DIR / "sql/ods/001_create_stg_schema.sql",
-        PROJECT_DIR / "sql/ods/002_create_stg_tables.sql",
+        PROJECT_DIR / "sql/stg/001_create_stg_schema.sql",
+        PROJECT_DIR / "sql/stg/002_create_stg_tables.sql",
     ]
 
-    for file in sql_files:
-        run_sql_file(file)
+    for sql_file in sql_files:
+        run_sql_file(sql_file)
 
-    print("Создалось, наконецто")
+    print("STG tables created")

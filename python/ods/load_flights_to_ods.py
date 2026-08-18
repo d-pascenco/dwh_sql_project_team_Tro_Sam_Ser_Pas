@@ -279,23 +279,23 @@ def load_flights():
 
                 print(f"Файл загружен: {s3_key}. Строк вставлено: {inserted_rows}")
 
-            except Exception as e:
+            except Exception as exc:
                 conn.rollback()
 
                 update_load_control(
                     conn=conn,
                     last_loaded_source=s3_key,
-                    upload_id=last_upload_id,
+                    upload_id=upload_id,
                     inserted_rows=0,
                     status="FAILED",
-                    error_text=f"{type(e).__name__}: {e}"
+                    error_text=f"{type(exc).__name__}: {exc}"
                 )
 
                 conn.commit()
 
                 print(f"Ошибка загрузки файла: {s3_key}")
-                print(type(e).__name__)
-                print(e)
+                print(type(exc).__name__)
+                print(exc)
                 raise
 
     print(f"Загрузка завершена. Всего новых строк: {total_inserted_rows}")
@@ -304,10 +304,4 @@ def load_flights():
 
 
 if __name__ == "__main__":
-    try:
-        load_flights()
-    except Exception as e:
-        print("не загрузилось")
-        print(type(e).__name__)
-        print(e)
-        raise
+    load_flights()

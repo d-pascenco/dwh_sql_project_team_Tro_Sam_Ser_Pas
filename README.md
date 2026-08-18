@@ -1,106 +1,115 @@
-# DWH проект по авиаперелетам
+# Хранилище данных по авиаперелётам
 
-Мы сделали учебное хранилище данных для анализа внутренних авиарейсов США. Проект собирает сырые данные о рейсах и аэропортах, очищает их, строит слой фактов и измерений, а потом готовит витрины для графиков в DataLens.
+Учебный командный проект по построению хранилища данных для анализа внутренних авиарейсов США. Система загружает сведения о рейсах и аэропортах, преобразует их по слоям хранилища и формирует витрины для Yandex DataLens.
 
-Основная аналитическая задача: смотреть количество рейсов, отмены, процент отмен, средние задержки и причины задержек в разрезе дат, перевозчиков и аэропортов.
+Основные аналитические показатели:
 
-## Стек
+- количество выполненных и отменённых рейсов;
+- процент отмен;
+- средняя задержка вылета и прилёта;
+- распределение задержек по причинам;
+- показатели по датам, перевозчикам и аэропортам.
 
-- Python
-- SQL
-- PostgreSQL
-- S3 / Object Storage
-- Airflow
-- dbt
-- DataLens
+## Об учебном проекте
 
-## Как устроен проект
+Проект выполнен командой из четырёх студентов первого курса магистратуры Национального исследовательского университета "Высшая школа экономики" в рамках образовательной программы "Магистр по наукам о данных", которая в настоящее время носит название "ПРИНТ".
 
-Данные проходят по слоям:
+- [НИУ ВШЭ](https://www.hse.ru/)
+- [Образовательная программа](https://www.hse.ru/ma/mds/)
+
+## About the academic project
+
+This project was completed by a team of four first-year master's students at HSE University as part of the Master of Data Science programme, currently known as "ANNT" (Applied Neural Network Technologies).
+
+- [HSE University](https://www.hse.ru/en/)
+- [Master's programme](https://www.hse.ru/en/ma/mds/)
+
+## Архитектура
 
 ```text
-ODS -> STG -> DDS -> DM -> DataLens
+S3 -> ODS -> STG -> DDS -> DM -> DataLens
 ```
 
-- `ODS` - принимаем сырые данные почти без изменений.
-- `STG` - чистим данные, приводим типы, убираем дубли.
-- `DDS` - строим основную модель хранилища: факты и измерения.
-- `DM` - делаем витрины, удобные для отчетов и графиков.
-- `DataLens` - строим итоговый дашборд.
+| Слой | Назначение |
+|------|------------|
+| ODS | Хранение исходных строк в JSONB и метаданных загрузки |
+| STG | Приведение типов, очистка и удаление дубликатов |
+| DDS | Формирование фактов и измерений |
+| DM | Подготовка агрегированных витрин для аналитики |
+
+Оркестрация выполняется в Airflow. STG и DDS реализованы как dbt-модели. Для ODS используются Python и SQL, для DM - SQL и `psql`.
 
 ## Структура репозитория
 
 ```text
-dags/       Airflow DAG-и
-python/     Python-скрипты для загрузки и запуска SQL
-sql/        SQL-скрипты по слоям ODS, STG, DDS, DM
-dbt/        dbt-модели для STG и DDS
-scripts/    скрипты для git pull / git push
+dags/           Airflow DAG-и для слоёв ODS, STG, DDS и DM
+dbt/            dbt-проект с моделями STG и DDS
+python/         загрузчики данных и команды локального запуска
+sql/            SQL-скрипты по слоям хранилища
+scripts/        вспомогательные команды Git
+config.example.env
+requirements.txt
 ```
 
-Локальные файлы с секретами:
+## Источники данных
 
-```text
-config.env
-git_config.env
-```
+- архивы рейсов в формате CSV.GZ, размещённые в S3-совместимом Object Storage;
+- справочник аэропортов [OurAirports](https://ourairports.com/data/).
 
-## Работа с Git
+ODS сохраняет имя источника, номер строки, идентификатор загрузки и время обработки. Ограничение по паре `source + row_number` предотвращает повторную вставку одной строки.
 
-Один раз даем права на запуск скриптов (сделали для удобства команды):
+## Подготовка окружения
+
+Для запуска Python-скриптов требуется Python 3.9 или новее.
 
 ```bash
-cd /home/jovyan/work/dwh_sql_project_team_Tro_Sam_Ser_Pas
-chmod +x scripts/git_push.sh
-chmod +x scripts/git_pull.sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp config.example.env config.env
 ```
 
-Подтягиваем актуальную версию:
+В `config.env` необходимо указать параметры PostgreSQL и Object Storage. Файл содержит секреты и исключён из Git.
+
+Основные переменные:
+
+| Переменная | Назначение |
+|------------|------------|
+| `PG_HOST`, `PG_PORT`, `PG_DATABASE` | Подключение к PostgreSQL |
+| `PG_USER`, `PG_PASSWORD` | Учётные данные PostgreSQL |
+| `S3_ENDPOINT_URL` | Адрес S3-совместимого хранилища |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | Учётные данные Object Storage |
+| `S3_SOURCE_BUCKET` | Bucket с исходными файлами рейсов |
+| `S3_AIRFLOW_BUCKET` | Bucket для файлов Airflow |
+
+## Локальный запуск
+
+Слои выполняются последовательно:
 
 ```bash
-./scripts/git_pull.sh
+python python/ods/run_ods_pipeline.py
+python python/stg/run_stg_pipeline.py
+python python/dds/run_dds_pipeline.py
 ```
 
-Пушим свои изменения:
+ODS загружает справочник аэропортов, определяет новые архивы рейсов в Object Storage и записывает результат каждой загрузки в `team_tro_sam_ser_pas_etl.load_control`.
+
+## dbt
+
+Файл `dbt/dbt_project.yml` позволяет запускать модели как самостоятельный dbt-проект. В локальном `profiles.yml` должен быть настроен профиль `team_tro_sam_ser_pas` для PostgreSQL.
 
 ```bash
-./scripts/git_push.sh "текст коммита"
+cd dbt
+dbt debug
+dbt run --select path:models/evserenko
+dbt run --select path:models/mvtrofimov
 ```
 
-Также есть ноутбуки `git_pull.ipynb` и `git_push.ipynb`, где эти команды можно запускать из ячеек.
+Макрос `generate_schema_name` сохраняет имена схем, указанные в моделях, без добавления схемы из профиля.
 
-## Загрузка проекта в Airflow bucket
+## Airflow
 
-Для загрузки файлов в bucket `gsb2024airflow` используется:
-
-```text
-python/s3/s3_push_AF.py
-```
-Скрипт загружает проект в командную папку:
-
-```text
-Team_Trofimov_Samundzhyan_Serenko_Paschenko/
-```
-
-Туда попадают:
-
-```text
-python/
-sql/
-dags/
-dbt/
-config.env
-```
-
-Также папка `dbt/` загружается в корень bucket, потому что STG и DDS DAG-и запускают модели из:
-
-```text
-/opt/airflow/dags/dbt
-```
-
-## Порядок запуска в Airflow
-
-Запускать DAG-и нужно строго по порядку:
+DAG-и запускаются в следующем порядке:
 
 ```text
 dipaschenko_ods_pipeline_dag
@@ -109,330 +118,51 @@ mvtrofimov_dds_pipeline_dag
 dasamundzhyan_dm_pipeline_dag
 ```
 
-То есть:
-```text
-ODS -> STG -> DDS -> DM
-```
-
-## ODS
-
-ODS - это слой сырых данных. Здесь мы сохраняем данные так, чтобы потом можно было понять, 
-из какого файла и из какой строки они пришли.
-
-Схемы:
-
-```text
-team_tro_sam_ser_pas_ods
-team_tro_sam_ser_pas_etl
-```
-
-Таблицы:
-
-- `team_tro_sam_ser_pas_ods.flights_raw` - сырые строки рейсов из S3.
-- `team_tro_sam_ser_pas_ods.airports_raw` - сырой справочник аэропортов.
-- `team_tro_sam_ser_pas_etl.load_control` - техническая таблица контроля загрузок.
-
-В ODS данные рейсов и аэропортов хранятся в `jsonb`. Дополнительно сохраняются:
-
-- `source` - файл-источник;
-- `row_number` - номер строки в файле;
-- `upload_id` - номер загрузки;
-- `upload_time` - время загрузки.
-
-Для защиты от дублей используется уникальность по `source + row_number`.
-
-SQL-файлы:
-
-```text
-sql/ods/001_create_ods_schema.sql
-sql/ods/002_create_ods_tables.sql
-sql/ods/003_create_etl_control.sql
-```
-
-Python-файлы:
-
-```text
-python/ods/create_ods_tables.py
-python/ods/load_airports_to_ods.py
-python/ods/load_flights_to_ods.py
-python/ods/run_ods_pipeline.py
-```
-
-Airflow DAG:
-
-```text
-dags/dipaschenko_ods_pipeline_dag.py
-```
-
-Что делает DAG:
-
-1. Создает ODS и ETL-таблицы.
-2. Загружает справочник аэропортов.
-3. Ищет новые файлы рейсов в S3.
-4. Загружает только те файлы, которых еще нет в `flights_raw`.
-5. Записывает результат загрузки в `load_control`.
-
-Локальный запуск (на всякий):
+Файлы проекта загружаются в Object Storage командой:
 
 ```bash
-python python/ods/run_ods_pipeline.py
+python python/s3/s3_push_AF.py
 ```
 
-## STG
+`config.env` не загружается этим скриптом. Переменные окружения и секреты необходимо настроить отдельно в среде Airflow.
 
-STG - это слой подготовки данных. Здесь сырые JSON-строки превращаются в нормальные колонки.
-
-Схема:
-
-```text
-team_tro_sam_ser_pas_stg
-```
-
-Основные объекты:
-
-- `flights_clean` - рейсы с нормальными типами колонок.
-- `airports_clean` - аэропорты с нормальными типами колонок.
-- `flights_deduplicated` - рейсы после удаления дублей.
-- `airports_deduplicated` - аэропорты после удаления дублей.
-- `flights_success_raw` - выполненные рейсы.
-- `flights_cancelled_raw` - отмененные рейсы.
-
-Что делаем в STG:
-
-- достаем поля из `jsonb`;
-- приводим даты, числа и коды к нормальному виду;
-- приводим коды аэропортов и перевозчиков к верхнему регистру;
-- убираем дубли рейсов;
-- убираем дубли аэропортов по `iata_code`;
-- делим рейсы на выполненные и отмененные.
-
-SQL-файлы:
-
-```text
-sql/stg/001_create_stg_schema.sql
-sql/stg/002_create_stg_tables.sql
-sql/stg/003_upload_stg_tables.sql
-sql/stg/004_deduplication_stg_tables.sql
-sql/stg/005_division_stg_tables.sql
-```
-
-dbt-модели:
-
-```text
-dbt/models/evserenko/
-```
-
-Airflow DAG:
-
-```text
-dags/evserenko_stg_pipeline_dag.py
-```
-
-В Airflow этот слой запускается через dbt:
-
-```bash
-cd /opt/airflow/dags/dbt
-dbt run --select path:models/evserenko
-```
-
-Локальный запуск SQL/Python-варианта:
-
-```bash
-python python/stg/run_stg_pipeline.py
-```
-
-## DDS
-
-DDS - это основной слой хранилища. Здесь мы строим модель со справочниками и фактами.
-
-Схема:
-
-```text
-team_tro_sam_ser_pas_dds
-```
+## Модель DDS
 
 Измерения:
 
-| Таблица | Что хранит |
-|---------|------------|
-| `dim_date` | даты рейсов |
-| `dim_carrier` | авиаперевозчиков |
-| `dim_airport` | аэропорты |
-| `dim_aircraft` | самолеты по `tail_num` |
+- `dim_date` - календарные атрибуты даты;
+- `dim_carrier` - авиаперевозчики;
+- `dim_airport` - аэропорты и географические атрибуты;
+- `dim_aircraft` - воздушные суда по бортовому номеру.
 
 Факты:
 
-| Таблица | Что хранит |
-|---------|------------|
-| `fct_flights` | выполненные рейсы |
-| `fct_cancelled_flights` | отмененные рейсы |
+- `fct_flights` - выполненные рейсы и показатели задержек;
+- `fct_cancelled_flights` - отменённые рейсы и причины отмены.
 
-В фактах есть ключи на измерения:
+Для локального времени рейсов используется часовой пояс региона аэропорта. Если регион не распознан, применяется UTC.
 
-- дата;
-- перевозчик;
-- аэропорт вылета;
-- аэропорт прилета;
-- самолет.
+## Витрины DM
 
-Также есть показатели:
+- `flight_overview` содержит количество рейсов, процент отмен и показатели задержек по датам, перевозчикам и аэропортам;
+- `delay_reasons` содержит длительность и долю задержек по каждой причине.
 
-- задержка вылета;
-- задержка прилета;
-- расстояние;
-- задержки по причинам;
-- код причины отмены для отмененных рейсов.
+Запросы для проверки витрин находятся в `sql/dm/004_check_dm_metrics.sql`. Примеры запросов для графиков DataLens находятся в `sql/dm/005_datalens_chart_queries.sql`.
 
-Для требования по времени в DDS добавлены поля:
+## Командная работа
 
-- `flight_dttm_local` - локальная дата и время вылета;
-- `scheduled_dep_dttm_local` - плановая дата и время вылета;
-- `actual_dep_dttm_local` - фактическая дата и время вылета;
-- `scheduled_arr_dttm_local` - плановая дата и время прилета;
-- `sched_dttm_local` - плановая дата и время вылета для отмененных рейсов.
+Разработка была разделена по слоям:
 
-`actual_dep_dttm_local` считается как:
+- Dmitri Pascenco - ODS и загрузка данных;
+- Elena Serenko - STG;
+- Matvey Trofimov - DDS;
+- Dina Dasamundzhyan - DM и аналитические витрины.
 
-```text
-плановое время вылета + задержка вылета в минутах
-```
+История Git сохраняет авторство участников проекта.
 
-Часовой пояс берется по региону аэропорта. Для неизвестных регионов используется `UTC`.
+## Ограничения
 
-SQL-файлы:
-
-```text
-sql/dds/001_create_dds_schema.sql
-sql/dds/002_create_dim_tables.sql
-sql/dds/003_create_fct_tables.sql
-sql/dds/004_load_dim_tables.sql
-sql/dds/005_load_fct_flights.sql
-sql/dds/006_create_cancelled_view.sql
-```
-
-dbt-модели:
-
-```text
-dbt/models/mvtrofimov/
-```
-
-Airflow DAG:
-
-```text
-dags/mvtrofimov_dds_pipeline_dag.py
-```
-
-В Airflow этот слой запускается через dbt:
-
-```bash
-cd /opt/airflow/dags/dbt
-dbt run --select path:models/mvtrofimov
-```
-
-Локальный запуск SQL/Python-варианта:
-
-```bash
-python python/dds/run_dds_pipeline.py
-```
-
-## DM
-
-DM - это слой витрин для аналитики и DataLens. 
-Здесь данные уже собраны в удобном для графиков виде.
-
-Схема:
-
-```text
-team_tro_sam_ser_pas_dm
-```
-
-Витрины:
-
-- `flight_overview` - общая витрина по рейсам, отменам и задержкам.
-- `delay_reasons` - витрина по причинам задержек.
-
-В `flight_overview` считаются:
-
-- количество выполненных рейсов;
-- количество отмененных рейсов;
-- общее количество рейсов;
-- процент отмен;
-- средняя задержка вылета;
-- средняя задержка прилета;
-- сумма задержек;
-- показатели по датам, перевозчикам и аэропортам.
-
-В `delay_reasons` задержки раскладываются по причинам:
-
-- задержка по вине перевозчика;
-- задержка из-за погоды;
-- задержка NAS;
-- задержка безопасности;
-- задержка из-за позднего прибытия самолета.
-
-SQL-файлы:
-
-```text
-sql/dm/001_create_dm_schema.sql
-sql/dm/002_create_dm_flight_overview.sql
-sql/dm/003_create_dm_delay_reasons.sql
-sql/dm/004_check_dm_metrics.sql
-sql/dm/005_datalens_chart_queries.sql
-```
-
-Airflow DAG:
-
-```text
-dags/dasamundzhyan_dm_pipeline_dag.py
-```
-
-DM DAG запускает обычные SQL-файлы через `psql`. Это отличается от STG и DDS, потому что STG/DDS сделаны через dbt, а DM у нас оформлен как набор SQL-скриптов.
-
-DAG выполняет:
-
-```text
-001_create_dm_schema.sql
-002_create_dm_flight_overview.sql
-003_create_dm_delay_reasons.sql
-004_check_dm_metrics.sql
-```
-
-Файл `005_datalens_chart_queries.sql` не запускается в DAG. Он нужен как набор готовых запросов для графиков.
-
-## DataLens
-
-Для визуализации данных использовался сервис Yandex DataLens. Подключение создавалось к PostgreSQL, в котором находятся подготовленные DM-витрины проекта.
-
-### Подключение к PostgreSQL
-
-Подключение к PostgreSQL выполнялось с помощью стандартного коннектора PostgreSQL в Yandex DataLens. В воркбуке Flights Project было создано новое подключение, после чего в параметрах были указаны хост, порт, база данных, пользователь и схема с DM-витринами.
-
-После создания подключения в DataLens были выбраны две DM-витрины:
-
-- `team_tro_sam_ser_pas_dm.flight_overview`
-- `team_tro_sam_ser_pas_dm.delay_reasons`
-
-На основе этих витрин были созданы два датасета:
-
-- `DM Flight Overview`
-- `DM Delay Reasons`
-
-Датасет DM Flight Overview используется для анализа количества рейсов, отмен и задержек по датам, перевозчикам и аэропортам.
-
-Датасет DM Delay Reasons используется для анализа причин задержек.
-
-В DataLens были добавлены вычисляемые поля:
-
-- `cancellation_rate_pct` — процент отменённых рейсов;
-- `avg_dep_delay_rate_min` — средняя задержка вылета.
-
-В DataLens были построены следующие графики:
-
-- количество рейсов по датам;
-- процент отмен по перевозчикам;
-- средняя задержка вылета по перевозчикам;
-- причины задержек;
-- задержки по аэропортам.
-
-Итоговый дашборд называется `Аналитика авиарейсов`.
-```
+- исходные файлы рейсов не включены в репозиторий из-за их объёма;
+- для полного запуска необходимы PostgreSQL, Object Storage, Airflow и локальный профиль dbt;
+- интеграционная проверка всех слоёв требует доступа к учебной инфраструктуре;
+- Airflow DAG-и используют пути, принятые в учебном окружении.

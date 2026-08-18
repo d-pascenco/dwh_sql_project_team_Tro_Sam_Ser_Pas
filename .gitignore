@@ -3,6 +3,8 @@ config.env
 
 __pycache__/
 *.pyc
+.venv/
+venv/
 .ipynb_checkpoints/
 
 target/

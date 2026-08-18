@@ -1,0 +1,10 @@
+name: team_tro_sam_ser_pas
+version: 1.0.0
+config-version: 2
+
+profile: team_tro_sam_ser_pas
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]

@@ -1,6 +1,5 @@
 import os
 import csv
-import json
 import requests
 from io import StringIO
 from pathlib import Path
@@ -118,10 +117,4 @@ def load_airports():
     print(f"аэропорты загружены: upload_id: {upload_id}. Всего строк: {inserted_rows}")
 
 if __name__ == "__main__":
-    try:
-        load_airports()
-    except Exception as e:
-        print("не загрузилось")
-        print(type(e).__name__)
-        print(e)
-        raise
+    load_airports()

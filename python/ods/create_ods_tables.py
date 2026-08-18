@@ -37,7 +37,7 @@ if __name__ == "__main__":
         PROJECT_DIR / "sql/ods/003_create_etl_control.sql",
     ]
 
-    for file in sql_files:
-        run_sql_file(file)
+    for sql_file in sql_files:
+        run_sql_file(sql_file)
 
-    print("Создалось, наконецто")
+    print("ODS tables created")

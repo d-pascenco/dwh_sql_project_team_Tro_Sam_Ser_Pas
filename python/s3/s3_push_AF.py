@@ -21,26 +21,22 @@ EXCLUDE_SUFFIXES = {
     ".pyc",
 }
 
-# Тут папки, что мы выбираем для пуша в S3 AF
 PROJECT_PATHS_TO_UPLOAD = [
     "python",
     "sql",
-    "config.env",
     "dags",
     "dbt",
-    "stg"
 ]
 
-# Эти папки дополнительно грузим в корень bucket.
 ROOT_PATHS_TO_UPLOAD = [
     "dbt",
 ]
 
-# Какие DAG-файлы грузим в корень bucket
 DAG_FILES_TO_UPLOAD = [
     "dags/dipaschenko_ods_pipeline_dag.py",
     "dags/evserenko_stg_pipeline_dag.py",
     "dags/mvtrofimov_dds_pipeline_dag.py",
+    "dags/dasamundzhyan_dm_pipeline_dag.py",
 ]
 
 
