@@ -155,10 +155,10 @@ python python/s3/s3_push_AF.py
 
 Разработка была разделена по слоям:
 
-- Dmitri Pascenco - ODS и загрузка данных;
-- Elena Serenko - STG;
-- Matvey Trofimov - DDS;
-- Dina Dasamundzhyan - DM и аналитические витрины.
+- Dmitri - ODS и загрузка данных;
+- Elena - STG;
+- Matvey - DDS;
+- Dina - DM и аналитические витрины.
 
 История Git сохраняет авторство участников проекта.
 
